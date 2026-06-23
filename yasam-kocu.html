@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yaşam Koçum</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+
+  <style>
+  /* ── TEMEL ── */
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --ana:#4F46E5;--ikincil:#06B6D4;
+    --bg:#0F0F1A;--yuzey:#1A1A2E;--yuzey2:#252540;
+    --metin:#F1F5F9;--muted:#94A3B8;--border:rgba(255,255,255,.08);
+    --ok:#22C55E;--warn:#F59E0B;--bad:#EF4444;--r:12px;
+  }
+  body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--metin);min-height:100vh;display:flex}
+
+  /* ── SİHİRBAZ OVERLAY ── */
+  #wizard-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.85);
+    display:flex;align-items:center;justify-content:center;
+    z-index:1000;padding:1rem;
+  }
+  #wizard-overlay.gizli{display:none}
+  #wizard-box{
+    background:var(--yuzey);border:1px solid var(--border);
+    border-radius:20px;width:100%;max-width:560px;
+    max-height:90vh;overflow-y:auto;
+  }
+  #wizard-header{
+    padding:1.5rem 1.5rem 0;
+    position:sticky;top:0;background:var(--yuzey);z-index:2;
+    border-radius:20px 20px 0 0;
+  }
+  .wiz-progress{display:flex;gap:4px;margin-bottom:1.25rem}
+  .wiz-prog-bar{height:3px;border-radius:99px;flex:1;background:var(--border);transition:background .3s}
+  .wiz-prog-bar.done{background:var(--ana)}
+  .wiz-prog-bar.active{background:var(--ikincil)}
+  .wiz-step-label{font-size:11px;color:var(--muted);margin-bottom:.35rem}
+  .wiz-step-title{font-size:20px;font-weight:700;color:var(--metin);margin-bottom:.25rem}
+  .wiz-step-sub{font-size:13px;color:var(--muted);margin-bottom:1.25rem;line-height:1.5}
+
+  #wizard-body{padding:0 1.5rem 1.5rem}
+
+  /* ── WİZARD ADIM ── */
+  .wiz-step{display:none}
+  .wiz-step.aktif{display:block}
+
+  /* ── SEÇİM BUTONLARI ── */
+  .secim-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:1rem}
+  .secim-btn{
+    background:var(--yuzey2);border:1.5px solid var(--border);
+    border-radius:10px;padding:10px 12px;cursor:pointer;
+    text-align:left;transition:all .15s;color:var(--metin);
+    font-size:13px;font-family:inherit;
+  }
+  .secim-btn:hover{border-color:var(--ana);background:rgba(79,70,229,.1)}
+  .secim-btn.secili{border-color:var(--ana);background:rgba(79,70,229,.2);color:#A5B4FC}
+  .secim-btn i{font-size:20px;display:block;margin-bottom:5px;color:var(--muted)}
+  .secim-btn.secili i{color:var(--ana)}
+
+  /* ── FORM ALANLARI ── */
+  .wiz-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1rem}
+  .wiz-group label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  .wiz-group input,.wiz-group select,.wiz-group textarea{
+    width:100%;background:var(--yuzey2);border:1px solid var(--border);
+    border-radius:8px;color:var(--metin);padding:9px 12px;
+    font-size:13px;font-family:inherit;transition:border-color .15s;
+  }
+  .wiz-group textarea{resize:none;height:80px}
+  .wiz-group input:focus,.wiz-group select:focus,.wiz-group textarea:focus{outline:none;border-color:var(--ana)}
+  .wiz-group input::placeholder,.wiz-group textarea::placeholder{color:var(--muted)}
+  .wiz-group select option{background:var(--yuzey2)}
+
+  /* ── CHECKBOX GRUBU ── */
+  .check-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-bottom:1rem}
+  .check-item{display:flex;align-items:center;gap:8px;background:var(--yuzey2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;transition:all .15s}
+  .check-item:hover{border-color:var(--ana)}
+  .check-item input[type=checkbox]{accent-color:var(--ana);width:15px;height:15px;cursor:pointer}
+  .check-item span{font-size:12px;color:var(--metin)}
+
+  /* ── WİZARD FOOTER ── */
+  #wizard-footer{
+    padding:1rem 1.5rem;border-top:1px solid var(--border);
+    display:flex;justify-content:space-between;align-items:center;
+    position:sticky;bottom:0;background:var(--yuzey);
+    border-radius:0 0 20px 20px;
+  }
+  .btn{background:var(--ana);border:none;border-radius:var(--r);color:#fff;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{opacity:.85}
+  .btn-ghost{background:var(--yuzey2);border:1px solid var(--border);border-radius:var(--r);color:var(--metin);padding:10px 16px;font-size:13px;cursor:pointer;transition:all .15s}
+  .btn-ghost:hover{border-color:var(--ana)}
+  .btn-link{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:0}
+  .btn-link:hover{color:var(--metin)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+
+  /* ── SIDEBAR ── */
+  #sidebar{width:220px;min-width:220px;background:var(--yuzey);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:1.25rem 0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  #logo{padding:0 1.25rem 1.25rem;border-bottom:1px solid var(--border);margin-bottom:.75rem}
+  #logo h1{font-size:15px;font-weight:600;color:var(--metin)}
+  #logo p{font-size:11px;color:var(--muted);margin-top:2px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 1.25rem;font-size:13px;color:var(--muted);cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:all .15s}
+  .nav-item:hover{color:var(--metin);background:var(--yuzey2)}
+  .nav-item.active{color:var(--metin);background:rgba(79,70,229,.2);border-right:2px solid var(--ana)}
+  .nav-item i{font-size:16px}
+  .nav-section{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:.75rem 1.25rem .25rem;margin-top:.25rem}
+
+  /* ── ANA İÇERİK ── */
+  #main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  #topbar{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid var(--border);background:var(--bg)}
+  #topbar h2{font-size:16px;font-weight:600}
+  #content{flex:1;overflow-y:auto;padding:1.5rem}
+
+  .panel{display:none}
+  .panel.active{display:block}
+
+  /* ── KARTLAR ── */
+  .card{background:var(--yuzey);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;margin-bottom:1rem}
+  .card h3{font-size:13px;font-weight:600;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+  .card h3 i{font-size:16px;color:var(--muted)}
+
+  /* ── METRİKLER ── */
+  .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1rem}
+  .metric{background:var(--yuzey2);border-radius:var(--r);padding:1rem;border:1px solid var(--border)}
+  .metric label{font-size:11px;color:var(--muted);display:block;margin-bottom:4px}
+  .metric .val{font-size:22px;font-weight:700}
+  .metric .unit{font-size:12px;color:var(--muted);margin-left:2px}
+  .progress-bar{background:var(--border);border-radius:99px;height:6px;margin-top:8px;overflow:hidden}
+  .progress-fill{height:100%;border-radius:99px;background:var(--ana);transition:width .3s}
+  .progress-fill.ok{background:var(--ok)}.progress-fill.warn{background:var(--warn)}.progress-fill.bad{background:var(--bad)}
+
+  /* ── SOHBET ── */
+  #chat-messages{display:flex;flex-direction:column;gap:12px;min-height:300px;max-height:420px;overflow-y:auto;padding:1rem;background:var(--yuzey2);border-radius:var(--r);margin-bottom:1rem;border:1px solid var(--border)}
+  .msg{display:flex;gap:10px;align-items:flex-start}
+  .msg.user{flex-direction:row-reverse}
+  .msg-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:rgba(79,70,229,.3)}
+  .msg.user .msg-avatar{background:rgba(6,182,212,.25)}
+  .bubble{padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.6;max-width:78%;white-space:pre-wrap}
+  .msg.ai .bubble{background:var(--yuzey);border:1px solid var(--border);border-radius:4px 16px 16px 16px}
+  .msg.user .bubble{background:rgba(79,70,229,.35);color:#E0DEFF;border-radius:16px 4px 16px 16px}
+  .typing-dot{display:inline-block;width:6px;height:6px;background:var(--muted);border-radius:50%;animation:bounce 1.2s infinite}
+  .typing-dot:nth-child(2){animation-delay:.2s}.typing-dot:nth-child(3){animation-delay:.4s}
+  @keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+  .chat-input-row{display:flex;gap:8px}
+  .chat-input-row textarea{flex:1;background:var(--yuzey2);border:1px solid var(--border);border-radius:var(--r);color:var(--metin);padding:10px 14px;font-size:13px;font-family:inherit;resize:none;height:44px;transition:border-color .15s}
+  .chat-input-row textarea:focus{outline:none;border-color:var(--ana)}
+  .chat-input-row textarea::placeholder{color:var(--muted)}
+
+  /* ── HIZLI EYLEMLER ── */
+  .quick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:1rem}
+  .qbtn{background:var(--yuzey2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;cursor:pointer;text-align:left;transition:all .15s;color:var(--metin)}
+  .qbtn:hover{border-color:var(--ana);background:rgba(79,70,229,.1)}
+  .qbtn i{font-size:18px;color:var(--muted);display:block;margin-bottom:6px}
+  .qbtn span{font-size:12px;font-weight:500;display:block}
+  .qbtn small{font-size:11px;color:var(--muted);display:block;margin-top:2px}
+
+  /* ── PROFİL PANELİ ── */
+  .profil-modul{background:var(--yuzey);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
+  .profil-modul-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;cursor:pointer;transition:background .15s}
+  .profil-modul-header:hover{background:var(--yuzey2)}
+  .profil-modul-header .sol{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500}
+  .profil-modul-header i{font-size:18px;color:var(--muted)}
+  .profil-modul-body{display:none;padding:0 1.25rem 1.25rem;border-top:1px solid var(--border)}
+  .profil-modul-body.acik{display:block}
+  .profil-data-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:1rem}
+  .profil-veri{background:var(--yuzey2);border-radius:8px;padding:.75rem}
+  .profil-veri-label{font-size:10px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em}
+  .profil-veri-deger{font-size:13px;color:var(--metin);font-weight:500}
+  .tamamlandi-badge{font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(34,197,94,.15);color:#86EFAC}
+  .eksik-badge{font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(245,158,11,.15);color:#FCD34D}
+
+  /* ── RAPOR / ANALİZ ── */
+  .report-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+  .report-row:last-child{border-bottom:none}
+  .report-row .lbl{color:var(--muted)}
+  .report-row .val{font-weight:600}
+  .ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+  .insight{background:var(--yuzey2);border-left:3px solid var(--ana);border-radius:0 var(--r) var(--r) 0;padding:.85rem 1rem;font-size:13px;display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+  .insight.warn{border-left-color:var(--warn)}.insight.good{border-left-color:var(--ok)}
+  .insight i{font-size:16px;flex-shrink:0;color:var(--ana)}
+  .insight.warn i{color:var(--warn)}.insight.good i{color:var(--ok)}
+
+  /* ── FORM GİRİŞ ── */
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:1rem}
+  .form-group label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  .form-group input,.form-group select{width:100%;background:var(--yuzey2);border:1px solid var(--border);border-radius:8px;color:var(--metin);padding:9px 12px;font-size:13px;font-family:inherit;transition:border-color .15s}
+  .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--ana)}
+  .form-group input::placeholder{color:var(--muted)}
+  .form-group select option{background:var(--yuzey2)}
+
+  /* ── TABLO ── */
+  .data-table{width:100%;border-collapse:collapse;font-size:12px}
+  .data-table th{text-align:left;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--border);font-weight:600}
+  .data-table td{padding:8px;border-bottom:1px solid var(--border)}
+  .data-table tr:last-child td{border-bottom:none}
+
+  /* ── GENEL ── */
+  .empty{text-align:center;padding:3rem 1rem;color:var(--muted)}
+  .empty i{font-size:36px;display:block;margin-bottom:.75rem}
+  .empty p{font-size:13px;line-height:1.6}
+  .badge{display:inline-flex;align-items:center;gap:4px;background:rgba(79,70,229,.2);color:#A5B4FC;font-size:11px;padding:2px 8px;border-radius:99px}
+  .mt{margin-top:.75rem}
+  ::-webkit-scrollbar{width:5px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  @media(max-width:640px){#sidebar{display:none}#content{padding:1rem}}
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     SİHİRBAZ — İlk Kurulum
+════════════════════════════════════════ -->
+<div id="wizard-overlay">
+  <div id="wizard-box">
+    <div id="wizard-header">
+      <div class="wiz-progress" id="wiz-progress"></div>
+      <div class="wiz-step-label" id="wiz-step-label"></div>
+      <div class="wiz-step-title" id="wiz-step-title"></div>
+      <div class="wiz-step-sub" id="wiz-step-sub"></div>
+    </div>
+
+    <div id="wizard-body">
+
+      <!-- ADIM 1: Genel Bilgiler -->
+      <div class="wiz-step" id="adim-0">
+        <div class="wiz-form-grid">
+          <div class="wiz-group" style="grid-column:1/-1">
+            <label>Adın ne?</label>
+            <input type="text" id="w-ad" placeholder="Adını yaz...">
+          </div>
+          <div class="wiz-group">
+            <label>Yaşın</label>
+            <input type="number" id="w-yas" placeholder="örn. 25">
+          </div>
+          <div class="wiz-group">
+            <label>Cinsiyet</label>
+            <select id="w-cinsiyet">
+              <option value="">Seç...</option>
+              <option>Erkek</option>
+              <option>Kadın</option>
+              <option>Belirtmek istemiyorum</option>
+            </select>
+          </div>
+          <div class="wiz-group">
+            <label>Boy (cm)</label>
+            <input type="number" id="w-boy" placeholder="örn. 178">
+          </div>
+          <div class="wiz-group">
+            <label>Şu anki kilo (kg)</label>
+            <input type="number" id="w-kilo" placeholder="örn. 85" step="0.1">
+          </div>
+          <div class="wiz-group">
+            <label>Hedef kilo (kg)</label>
+            <input type="number" id="w-hedefkilo" placeholder="örn. 75" step="0.1">
+          </div>
+          <div class="wiz-group">
+            <label>Yaşam amacın nedir? (kısaca)</label>
+            <input type="text" id="w-amac" placeholder="örn. Sağlıklı ve disiplinli bir hayat">
+          </div>
+        </div>
+      </div>
+
+      <!-- ADIM 2: Spor Profili -->
+      <div class="wiz-step" id="adim-1">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:.75rem">Spor geçmişin nasıl?</p>
+        <div class="secim-grid" id="spor-seviye-grid">
+          <button class="secim-btn" data-grup="spor-seviye" data-deger="Yeni başlıyorum"><i class="ti ti-seeding"></i>Yeni başlıyorum</button>
+          <button class="secim-btn" data-grup="spor-seviye" data-deger="Ara sıra yapıyorum"><i class="ti ti-flame"></i>Ara sıra yapıyorum</button>
+          <button class="secim-btn" data-grup="spor-seviye" data-deger="Düzenli ve tecrübeliyim"><i class="ti ti-trophy"></i>Düzenli ve tecrübeliyim</button>
+        </div>
+
+        <p style="font-size:12px;color:var(--muted);margin-bottom:.75rem">Nerede spor yapıyorsun?</p>
+        <div class="secim-grid" id="spor-yer-grid">
+          <button class="secim-btn" data-grup="spor-yer" data-deger="Spor salonu"><i class="ti ti-building"></i>Spor salonu</button>
+          <button class="secim-btn" data-grup="spor-yer" data-deger="Evde"><i class="ti ti-home"></i>Evde</button>
+          <button class="secim-btn" data-grup="spor-yer" data-deger="Her ikisi de"><i class="ti ti-refresh"></i>Her ikisi de</button>
+        </div>
+
+        <p style="font-size:12px;color:var(--muted);margin-bottom:.75rem">Asıl hedefin ne?</p>
+        <div class="secim-grid" id="spor-hedef-grid">
+          <button class="secim-btn" data-grup="spor-hedef" data-deger="Yağ yakmak"><i class="ti ti-flame"></i>Yağ yakmak</button>
+          <button class="secim-btn" data-grup="spor-hedef" data-deger="Kas yapmak"><i class="ti ti-barbell"></i>Kas yapmak</button>
+          <button class="secim-btn" data-grup="spor-hedef" data-deger="İkisi de"><i class="ti ti-arrows-exchange"></i>İkisi de</button>
+          <button class="secim-btn" data-grup="spor-hedef" data-deger="Genel sağlık"><i class="ti ti-heart"></i>Genel sağlık</button>
+        </div>
+
+        <div class="wiz-form-grid">
+          <div class="wiz-group">
+            <label>Haftada kaç gün?</label>
+            <select id="w-spor-gun">
+              <option value="">Seç...</option>
+              <option>2 gün</option><option>3 gün</option><option>4 gün</option>
+              <option>5 gün</option><option>6 gün</option>
+            </select>
+          </div>
+          <div class="wiz-group">
+            <label>Antrenman süresi</label>
+            <select id="w-spor-sure">
+              <option value="">Seç...</option>
+              <option>30-45 dakika</option><option>1 saat</option>
+              <option>1.5 saat</option><option>2 saat+</option>
+            </select>
+          </div>
+          <div class="wiz-group">
+            <label>Antrenman programın</label>
+            <input type="text" id="w-spor-program" placeholder="örn. PPL, Bro split, yok">
+          </div>
+          <div class="wiz-group" style="grid-column:1/-1">
+            <label>Sakatlık veya kısıtlaman var mı?</label>
+            <input type="text" id="w-spor-kisit" placeholder="örn. Diz sorunu, bel fıtığı — yoksa 'yok' yaz">
+          </div>
+        </div>
+      </div>
+
+      <!-- ADIM 3: Beslenme Profili -->
+      <div class="wiz-step" id="adim-2">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:.75rem">Beslenme tarzın nasıl?</p>
+        <div class="secim-grid" id="beslenme-tip-grid">
+          <button class="secim-btn" data-grup="beslenme-tip" data-deger="Normal (her şeyi yerim)"><i class="ti ti-meat"></i>Normal</button>
+          <button class="secim-btn" data-grup="beslenme-tip" data-deger="Vejetaryen"><i class="ti ti-leaf"></i>Vejetaryen</button>
+          <button class="secim-btn" data-grup="beslenme-tip" data-deger="Vegan"><i class="ti ti-plant"></i>Vegan</button>
+          <button class="secim-btn" data-grup="beslenme-tip" data-deger="Ketojenik / Düşük karbonhidrat"><i class="ti ti-egg"></i>Keto / Düşük karbo</button>
+        </div>
+
+        <div class="wiz-form-grid">
+          <div class="wiz-group">
+            <label>Günlük öğün sayısı</label>
+            <select id="w-beslenme-ogun">
+              <option value="">Seç...</option>
+              <option>2 öğün</option><option>3 öğün</option>
+              <option>4 öğün</option><option>5+ öğün</option>
+            </select>
+          </div>
+          <div class="wiz-group">
+            <label>Hedef kalori (kcal)</label>
+            <input type="number" id="w-beslenme-kalori" placeholder="örn. 2000">
+          </div>
+          <div class="wiz-group">
+            <label>Hedef protein (g)</label>
+            <input type="number" id="w-beslenme-protein" placeholder="örn. 150">
+          </div>
+          <div class="wiz-group">
+            <label>Günlük su hedefi (L)</label>
+            <input type="number" id="w-beslenme-su" placeholder="örn. 3" step="0.5">
+          </div>
+          <div class="wiz-group" style="grid-column:1/-1">
+            <label>Alerjin veya intoleransın var mı?</label>
+            <input type="text" id="w-beslenme-alerji" placeholder="örn. Laktoz, gluten — yoksa 'yok' yaz">
+          </div>
+          <div class="wiz-group" style="grid-column:1/-1">
+            <label>Sevmediğin yiyecekler</label>
+            <input type="text" id="w-beslenme-sevmez" placeholder="örn. Brokoli, karaciğer">
+          </div>
+          <div class="wiz-group" style="grid-column:1/-1">
+            <label>Sindirim sorunun var mı?</label>
+            <input type="text" id="w-beslenme-sindirim" placeholder="örn. Şişkinlik, reflü — yoksa 'yok' yaz">
+          </div>
+        </div>
+      </div>
+
+      <!-- ADIM 4: Uyku Profili -->
+      <div class="wiz-step" id="adim-3">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:.75rem">Sen nasıl bir insansın?</p>
+        <div class="secim-grid" id="uyku-kronotip-grid">
+          <button class="secim-btn" data-grup="uyku-kronotip" data-deger="Sabah insanı (erken kalkar, erken yatar)"><i class="ti ti-sunrise"></i>Sabah insanı</button>
+          <button class="secim-btn" data-grup="uyku-kronotip" data-deger="Akşam insanı (geç yatar, geç kalkar)"><i class="ti ti-moon"></i>Akşam insanı</button>
+          <button class="secim-btn" data-grup="uyku-kronotip" data-deger="İkisi arası"><i class="ti ti-minus"></i>İkisi arası</button>
+        </div>
+
+        <div class="wiz-form-grid">
+          <div class="wiz-group">
+            <label>Hedef uyku süresi (saat)</label>
+            <input type="number" id="w-uyku-sure" placeholder="örn. 8" step="0.5">
+          </div>
+          <div class="wiz-group">
+            <label>İdeal yatış saati</label>
+            <input type="time" id="w-uyku-yatis">
+          </div>
+          <div class="wiz-group">
+            <label>İdeal kalkış saati</label>
+            <input type="time" id="w-uyku-kalkis">
+          </div>
+          <div class="wiz-group">
+            <label>Kafein kullanımın</label>
+            <select id="w-uyku-kafein">
+              <option value="">Seç...</option>
+              <option>Hiç içmiyorum</option>
+              <option>Günde 1-2 bardak</option>
+              <option>Günde 3+ bardak</option>
+              <option>Öğleden sonra da içiyorum</option>
+            </select>
+          </div>
+          <div class="wiz-group" style="grid-column:1/-1">
+            <label>Uyku probleminiz var mı?</label>
+            <input type="text" id="w-uyku-sorun" placeholder="örn. Uykuya dalamıyorum, sık uyanıyorum — yoksa 'yok' yaz">
+          </div>
+        </div>
+      </div>
+
+      <!-- ADIM 5: Finans Profili -->
+      <div class="wiz-step" id="adim-4">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:.75rem">Finansal durumun nasıl? (İstersen atlayabilirsin)</p>
+
+        <div class="wiz-form-grid">
+          <div class="wiz-group">
+            <label>Aylık gelirin (₺)</label>
+            <input type="number" id="w-finans-gelir" placeholder="örn. 15000">
+          </div>
+          <div class="wiz-group">
+            <label>Aylık harcama bütçen (₺)</label>
+            <input type="number" id="w-finans-butce" placeholder="örn. 8000">
+          </div>
+          <div class="wiz-group">
+            <label>Aylık tasarruf hedefin (₺)</label>
+            <input type="number" id="w-finans-tasarruf" placeholder="örn. 3000">
+          </div>
+          <div class="wiz-group">
+            <label>Günlük harcama limiti (₺)</label>
+            <input type="number" id="w-finans-gunluk" placeholder="örn. 200">
+          </div>
+        </div>
+
+        <p style="font-size:12px;color:var(--muted);margin-bottom:.75rem">Borç durumun</p>
+        <div class="secim-grid" id="finans-borc-grid">
+          <button class="secim-btn" data-grup="finans-borc" data-deger="Borcum yok"><i class="ti ti-circle-check"></i>Borcum yok</button>
+          <button class="secim-btn" data-grup="finans-borc" data-deger="Az miktarda borcum var"><i class="ti ti-circle-minus"></i>Az borç</button>
+          <button class="secim-btn" data-grup="finans-borc" data-deger="Önemli miktarda borcum var"><i class="ti ti-alert-circle"></i>Önemli borç</button>
+        </div>
+
+        <div class="wiz-form-grid">
+          <div class="wiz-group" style="grid-column:1/-1">
+            <label>Finansal hedefiniz nedir?</label>
+            <input type="text" id="w-finans-hedef" placeholder="örn. Acil fon biriktirmek, ev almak, yatırım yapmak">
+          </div>
+        </div>
+      </div>
+
+      <!-- ADIM 6: Eğitim & Kariyer Profili -->
+      <div class="wiz-step" id="adim-5">
+        <div class="wiz-form-grid">
+          <div class="wiz-group" style="grid-column:1/-1">
+            <label>Hangi alanda çalışıyor / okuyorsun?</label>
+            <input type="text" id="w-egitim-alan" placeholder="örn. Makine mühendisliği, Yazılım, İşletme">
+          </div>
+          <div class="wiz-group" style="grid-column:1/-1">
+            <label>Şu an hangi derslere / konulara çalışıyorsun?</label>
+            <input type="text" id="w-egitim-dersler" placeholder="örn. CAD, Termodinamik, İngilizce">
+          </div>
+          <div class="wiz-group">
+            <label>Günlük çalışma hedefin (saat)</label>
+            <input type="number" id="w-egitim-sure" placeholder="örn. 3" step="0.5">
+          </div>
+          <div class="wiz-group">
+            <label>İngilizce seviyeni</label>
+            <select id="w-egitim-ing">
+              <option value="">Seç...</option>
+              <option>Başlangıç (A1-A2)</option>
+              <option>Orta (B1-B2)</option>
+              <option>İleri (C1-C2)</option>
+              <option>Çalışmıyorum</option>
+            </select>
+          </div>
+          <div class="wiz-group" style="grid-column:1/-1">
+            <label>Hedeflediğin sertifika veya sınav</label>
+            <input type="text" id="w-egitim-sertifika" placeholder="örn. YKS, TOEFL, SolidWorks sertifikası">
+          </div>
+          <div class="wiz-group" style="grid-column:1/-1">
+            <label>En zayıf olduğun konular</label>
+            <input type="text" id="w-egitim-zayif" placeholder="örn. Matematik, İngilizce grammar">
+          </div>
+        </div>
+      </div>
+
+      <!-- ADIM 7: Alışkanlıklar -->
+      <div class="wiz-step" id="adim-6">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:.75rem">Bırakmak istediğin alışkanlıklar (birden fazla seçebilirsin)</p>
+        <div class="check-grid">
+          <label class="check-item"><input type="checkbox" class="aliskan-birak" value="Sigara"><span>🚬 Sigara</span></label>
+          <label class="check-item"><input type="checkbox" class="aliskan-birak" value="Alkol"><span>🍺 Alkol</span></label>
+          <label class="check-item"><input type="checkbox" class="aliskan-birak" value="Aşırı sosyal medya"><span>📱 Sosyal medya</span></label>
+          <label class="check-item"><input type="checkbox" class="aliskan-birak" value="Abur cubur yemek"><span>🍔 Abur cubur</span></label>
+          <label class="check-item"><input type="checkbox" class="aliskan-birak" value="Geç yatmak"><span>🌙 Geç yatmak</span></label>
+          <label class="check-item"><input type="checkbox" class="aliskan-birak" value="Aşırı kafein"><span>☕ Aşırı kafein</span></label>
+          <label class="check-item"><input type="checkbox" class="aliskan-birak" value="Erteleme alışkanlığı"><span>⏰ Erteleme</span></label>
+        </div>
+        <div class="wiz-group" style="margin-bottom:1rem">
+          <label>Diğer (yaz)</label>
+          <input type="text" id="w-birak-diger" placeholder="Eklemek istediğin varsa...">
+        </div>
+
+        <p style="font-size:12px;color:var(--muted);margin-bottom:.75rem">Kazanmak istediğin alışkanlıklar</p>
+        <div class="check-grid">
+          <label class="check-item"><input type="checkbox" class="aliskan-kazan" value="Erken kalkmak"><span>🌅 Erken kalkmak</span></label>
+          <label class="check-item"><input type="checkbox" class="aliskan-kazan" value="Düzenli kitap okumak"><span>📚 Kitap okumak</span></label>
+          <label class="check-item"><input type="checkbox" class="aliskan-kazan" value="Meditasyon yapmak"><span>🧘 Meditasyon</span></label>
+          <label class="check-item"><input type="checkbox" class="aliskan-kazan" value="Günlük yürüyüş"><span>🚶 Yürüyüş</span></label>
+          <label class="check-item"><input type="checkbox" class="aliskan-kazan" value="Düzenli uyku saati"><span>😴 Düzenli uyku</span></label>
+          <label class="check-item"><input type="checkbox" class="aliskan-kazan" value="Günlük ders çalışmak"><span>✏️ Ders çalışmak</span></label>
+          <label class="check-item"><input type="checkbox" class="aliskan-kazan" value="Daha az telefon kullanmak"><span>📵 Az telefon</span></label>
+          <label class="check-item"><input type="checkbox" class="aliskan-kazan" value="Düzenli spor yapmak"><span>💪 Düzenli spor</span></label>
+        </div>
+        <div class="wiz-group" style="margin-bottom:1rem">
+          <label>Diğer (yaz)</label>
+          <input type="text" id="w-kazan-diger" placeholder="Eklemek istediğin varsa...">
+        </div>
+
+        <div class="wiz-group">
+          <label>Şu an sahip olduğun iyi alışkanlıklar</label>
+          <input type="text" id="w-iyi-aliskan" placeholder="örn. Her gün spor yapıyorum, su içiyorum">
+        </div>
+      </div>
+
+    </div><!-- /wizard-body -->
+
+    <div id="wizard-footer">
+      <button class="btn-ghost" id="wiz-geri-btn" onclick="wizardGeri()" style="display:none">← Geri</button>
+      <div style="display:flex;gap:10px;align-items:center;margin-left:auto">
+        <button class="btn-link" onclick="wizardAtla()">Bu adımı atla</button>
+        <button class="btn" id="wiz-ileri-btn" onclick="wizardIleri()">İleri →</button>
+      </div>
+    </div>
+
+  </div><!-- /wizard-box -->
+</div><!-- /wizard-overlay -->
+
+
+<!-- ════════════════════════════════════════
+     ANA UYGULAMA
+════════════════════════════════════════ -->
+<nav id="sidebar">
+  <div id="logo">
+    <h1>Yaşam Koçum</h1>
+    <p>AI Kişisel Asistan</p>
+  </div>
+
+  <button class="nav-item active" onclick="goster('koc')" data-panel="koc"><i class="ti ti-message-circle"></i> Koç</button>
+  <button class="nav-item" onclick="goster('giris')" data-panel="giris"><i class="ti ti-edit"></i> Günlük Giriş</button>
+  <button class="nav-item" onclick="goster('profil')" data-panel="profil"><i class="ti ti-user-circle"></i> Profilim</button>
+
+  <div class="nav-section">Takip</div>
+  <button class="nav-item" onclick="goster('saglik')" data-panel="saglik"><i class="ti ti-heart-rate"></i> Sağlık</button>
+  <button class="nav-item" onclick="goster('beslenme')" data-panel="beslenme"><i class="ti ti-apple"></i> Beslenme</button>
+  <button class="nav-item" onclick="goster('spor')" data-panel="spor"><i class="ti ti-run"></i> Spor</button>
+  <button class="nav-item" onclick="goster('uyku')" data-panel="uyku"><i class="ti ti-moon"></i> Uyku</button>
+  <button class="nav-item" onclick="goster('finans')" data-panel="finans"><i class="ti ti-coin"></i> Finans</button>
+
+  <div class="nav-section">Raporlar</div>
+  <button class="nav-item" onclick="goster('rapor')" data-panel="rapor"><i class="ti ti-file-analytics"></i> Haftalık Rapor</button>
+  <button class="nav-item" onclick="goster('analiz')" data-panel="analiz"><i class="ti ti-bulb"></i> AI Analizleri</button>
+</nav>
+
+<div id="main">
+  <div id="topbar">
+    <h2 id="panel-title">Koç</h2>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:12px;color:var(--muted)" id="bugun-tarih"></span>
+      <span class="badge"><i class="ti ti-database" style="font-size:11px"></i> Hafıza aktif</span>
+    </div>
+  </div>
+
+  <div id="content">
+
+    <!-- KOÇ -->
+    <div class="panel active" id="panel-koc">
+      <div class="quick-grid">
+        <button class="qbtn" onclick="hizliMesaj('Günlük veri girişi yapmak istiyorum.')"><i class="ti ti-plus"></i><span>Günlük giriş</span><small>Veriyi konuşarak gir</small></button>
+        <button class="qbtn" onclick="hizliMesaj('Genel durumumu analiz et ve önerilerini söyle.')"><i class="ti ti-chart-line"></i><span>Analiz et</span><small>Genel değerlendirme</small></button>
+        <button class="qbtn" onclick="hizliMesaj('Haftalık rapor ver.')"><i class="ti ti-calendar-week"></i><span>Haftalık rapor</span><small>7 günlük özet</small></button>
+        <button class="qbtn" onclick="hizliMesaj('Profilime göre bu hafta için spor programı yap.')"><i class="ti ti-barbell"></i><span>Spor programı</span><small>Kişisel program</small></button>
+        <button class="qbtn" onclick="hizliMesaj('Profilime göre beslenme planı oluştur.')"><i class="ti ti-apple"></i><span>Beslenme planı</span><small>Kişisel plan</small></button>
+        <button class="qbtn" onclick="hizliMesaj('Hedeflerime ne kadar yaklaştım?')"><i class="ti ti-target"></i><span>Hedef takibi</span><small>İlerleme durumu</small></button>
+      </div>
+      <div id="chat-messages"></div>
+      <div class="chat-input-row">
+        <textarea id="user-input" placeholder="Koçunla konuş..." onkeydown="handleKey(event)"></textarea>
+        <button class="btn" id="send-btn" onclick="mesajGonder()" style="height:44px">
+          <i class="ti ti-send"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- GÜNLÜK GİRİŞ -->
+    <div class="panel" id="panel-giris">
+      <div class="card">
+        <h3><i class="ti ti-heart-rate"></i> Sağlık & Duygu</h3>
+        <div class="form-grid">
+          <div class="form-group"><label>Kilo (kg)</label><input type="number" id="g-kilo" placeholder="örn. 80.5" step="0.1"></div>
+          <div class="form-group"><label>Enerji (1-10)</label><input type="number" id="g-enerji" placeholder="7" min="1" max="10"></div>
+          <div class="form-group"><label>Stres (1-10)</label><input type="number" id="g-stres" placeholder="4" min="1" max="10"></div>
+          <div class="form-group"><label>Ruh hali</label>
+            <select id="g-ruh"><option value="">Seç...</option><option>Harika</option><option>İyi</option><option>Normal</option><option>Kötü</option><option>Çok kötü</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3><i class="ti ti-apple"></i> Beslenme</h3>
+        <div class="form-grid">
+          <div class="form-group"><label>Kalori (kcal)</label><input type="number" id="g-kalori" placeholder="2000"></div>
+          <div class="form-group"><label>Protein (g)</label><input type="number" id="g-protein" placeholder="150"></div>
+          <div class="form-group"><label>Karbonhidrat (g)</label><input type="number" id="g-karbo" placeholder="200"></div>
+          <div class="form-group"><label>Su (L)</label><input type="number" id="g-su" placeholder="2.5" step="0.1"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3><i class="ti ti-run"></i> Spor & Aktivite</h3>
+        <div class="form-grid">
+          <div class="form-group"><label>Adım sayısı</label><input type="number" id="g-adim" placeholder="8500"></div>
+          <div class="form-group"><label>Antrenman</label><input type="text" id="g-antrenman" placeholder="örn. Push günü"></div>
+          <div class="form-group"><label>Antrenman süresi (dk)</label><input type="number" id="g-antrenman-sure" placeholder="60"></div>
+          <div class="form-group"><label>Kas ağrısı (1-10)</label><input type="number" id="g-agri" placeholder="3" min="1" max="10"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3><i class="ti ti-moon"></i> Uyku</h3>
+        <div class="form-grid">
+          <div class="form-group"><label>Uyku süresi (saat)</label><input type="number" id="g-uyku" placeholder="7.5" step="0.5"></div>
+          <div class="form-group"><label>Uyku kalitesi (1-10)</label><input type="number" id="g-uyku-kalite" placeholder="8" min="1" max="10"></div>
+          <div class="form-group"><label>Yatış saati</label><input type="time" id="g-yatis"></div>
+          <div class="form-group"><label>Kalkış saati</label><input type="time" id="g-kalkis"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3><i class="ti ti-coin"></i> Finans & Eğitim</h3>
+        <div class="form-grid">
+          <div class="form-group"><label>Günlük harcama (₺)</label><input type="number" id="g-harcama" placeholder="150"></div>
+          <div class="form-group"><label>Ders çalışma (saat)</label><input type="number" id="g-ders" placeholder="2" step="0.5"></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Bugünün notu</label><input type="text" id="g-notlar" placeholder="Bugün nasıl geçti?"></div>
+        </div>
+      </div>
+      <button class="btn" style="width:100%;justify-content:center;padding:12px;font-size:14px" onclick="formKaydet()">
+        <i class="ti ti-device-floppy"></i> Bugünü Kaydet & AI'ya Analiz Ettir
+      </button>
+    </div>
+
+    <!-- PROFİLİM -->
+    <div class="panel" id="panel-profil">
+      <div id="profil-icerik"></div>
+    </div>
+
+    <!-- SAĞLIK -->
+    <div class="panel" id="panel-saglik">
+      <div class="metric-grid" id="saglik-metrikler"></div>
+      <div class="card"><h3><i class="ti ti-history"></i> Son 14 gün</h3><div id="saglik-tablo"></div></div>
+    </div>
+
+    <!-- BESLENME -->
+    <div class="panel" id="panel-beslenme">
+      <div class="metric-grid" id="beslenme-metrikler"></div>
+      <div class="card"><h3><i class="ti ti-history"></i> Son 14 gün</h3><div id="beslenme-tablo"></div></div>
+    </div>
+
+    <!-- SPOR -->
+    <div class="panel" id="panel-spor">
+      <div class="metric-grid" id="spor-metrikler"></div>
+      <div class="card"><h3><i class="ti ti-history"></i> Son 14 gün</h3><div id="spor-tablo"></div></div>
+    </div>
+
+    <!-- UYKU -->
+    <div class="panel" id="panel-uyku">
+      <div class="metric-grid" id="uyku-metrikler"></div>
+      <div class="card"><h3><i class="ti ti-history"></i> Son 14 gün</h3><div id="uyku-tablo"></div></div>
+    </div>
+
+    <!-- FİNANS -->
+    <div class="panel" id="panel-finans">
+      <div class="metric-grid" id="finans-metrikler"></div>
+      <div class="card"><h3><i class="ti ti-history"></i> Son 14 gün</h3><div id="finans-tablo"></div></div>
+    </div>
+
+    <!-- RAPOR -->
+    <div class="panel" id="panel-rapor"><div id="rapor-icerik"></div></div>
+
+    <!-- ANALİZ -->
+    <div class="panel" id="panel-analiz"><div id="analiz-icerik"></div></div>
+
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════
+//  VERİ YÖNETİMİ
+// ════════════════════════════════════
+const VERI_KEY = 'yasam_kocu_v4';
+
+function veriYukle() {
+  try { return JSON.parse(localStorage.getItem(VERI_KEY)) || { profil:{}, entries:[], chatGecmis:[] }; }
+  catch(e) { return { profil:{}, entries:[], chatGecmis:[] }; }
+}
+function veriKaydet(d) { localStorage.setItem(VERI_KEY, JSON.stringify(d)); }
+
+let appVeri = veriYukle();
+let chatGecmis = (appVeri.chatGecmis||[]).slice(-30);
+
+// ════════════════════════════════════
+//  SİHİRBAZ
+// ════════════════════════════════════
+const WIZ_ADIMLAR = [
+  { label:'Adım 1 / 7', baslik:'Seni tanıyalım 👋', aciklama:'Temel bilgilerini girerek başlayalım. Bu bilgiler koçunun seni daha iyi tanımasını sağlar.' },
+  { label:'Adım 2 / 7', baslik:'Spor profili 🏋️', aciklama:'Antrenman alışkanlıkların ve hedeflerini anlayalım.' },
+  { label:'Adım 3 / 7', baslik:'Beslenme profili 🥗', aciklama:'Beslenme tarzını ve hedeflerini belirleyelim.' },
+  { label:'Adım 4 / 7', baslik:'Uyku profili 😴', aciklama:'Uyku düzenin ve hedeflerini anlayalım.' },
+  { label:'Adım 5 / 7', baslik:'Finans profili 💰', aciklama:'Finansal durumunu ve hedeflerini belirleyelim. İstersen atlayabilirsin.' },
+  { label:'Adım 6 / 7', baslik:'Eğitim & kariyer 📚', aciklama:'Çalışma hayatın ve öğrenme hedeflerini anlayalım.' },
+  { label:'Adım 7 / 7', baslik:'Alışkanlıklar ✨', aciklama:'Son adım! Bırakmak ve kazanmak istediğin alışkanlıkları seçelim.' },
+];
+
+let aktifAdim = 0;
+
+function wizardGuncelle() {
+  const adim = WIZ_ADIMLAR[aktifAdim];
+  document.getElementById('wiz-step-label').textContent = adim.label;
+  document.getElementById('wiz-step-title').textContent = adim.baslik;
+  document.getElementById('wiz-step-sub').textContent = adim.aciklama;
+
+  // Progress barlar
+  const progHtml = WIZ_ADIMLAR.map((_,i) =>
+    `<div class="wiz-prog-bar ${i<aktifAdim?'done':i===aktifAdim?'active':''}"></div>`
+  ).join('');
+  document.getElementById('wiz-progress').innerHTML = progHtml;
+
+  // Adımları göster/gizle
+  document.querySelectorAll('.wiz-step').forEach((el,i) => {
+    el.classList.toggle('aktif', i === aktifAdim);
+  });
+
+  // Butonlar
+  document.getElementById('wiz-geri-btn').style.display = aktifAdim > 0 ? 'block' : 'none';
+  const ileriBtn = document.getElementById('wiz-ileri-btn');
+  ileriBtn.textContent = aktifAdim === WIZ_ADIMLAR.length-1 ? 'Başlayalım! 🚀' : 'İleri →';
+}
+
+function wizardIleri() {
+  if (aktifAdim < WIZ_ADIMLAR.length - 1) {
+    aktifAdim++;
+    wizardGuncelle();
+  } else {
+    wizardKaydet();
+  }
+}
+
+function wizardGeri() {
+  if (aktifAdim > 0) { aktifAdim--; wizardGuncelle(); }
+}
+
+function wizardAtla() {
+  if (aktifAdim < WIZ_ADIMLAR.length - 1) { aktifAdim++; wizardGuncelle(); }
+  else wizardKaydet();
+}
+
+function secimBtnOlustur() {
+  document.querySelectorAll('[data-grup]').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const grup = this.dataset.grup;
+      document.querySelectorAll(`[data-grup="${grup}"]`).forEach(b => b.classList.remove('secili'));
+      this.classList.add('secili');
+    });
+  });
+}
+
+function secimDegerAl(grup) {
+  const secili = document.querySelector(`[data-grup="${grup}"].secili`);
+  return secili ? secili.dataset.deger : '';
+}
+
+function checkboxDegerAl(cls) {
+  return Array.from(document.querySelectorAll(`.${cls}:checked`)).map(c=>c.value).join(', ');
+}
+
+function wizardKaydet() {
+  const profil = {
+    tamamlandi: true,
+    genel: {
+      ad: document.getElementById('w-ad').value,
+      yas: document.getElementById('w-yas').value,
+      cinsiyet: document.getElementById('w-cinsiyet').value,
+      boy: document.getElementById('w-boy').value,
+      kilo: document.getElementById('w-kilo').value,
+      hedefKilo: document.getElementById('w-hedefkilo').value,
+      amac: document.getElementById('w-amac').value,
+    },
+    spor: {
+      seviye: secimDegerAl('spor-seviye'),
+      yer: secimDegerAl('spor-yer'),
+      hedef: secimDegerAl('spor-hedef'),
+      gun: document.getElementById('w-spor-gun').value,
+      sure: document.getElementById('w-spor-sure').value,
+      program: document.getElementById('w-spor-program').value,
+      kisitlamalar: document.getElementById('w-spor-kisit').value,
+    },
+    beslenme: {
+      tip: secimDegerAl('beslenme-tip'),
+      ogun: document.getElementById('w-beslenme-ogun').value,
+      kalori: document.getElementById('w-beslenme-kalori').value,
+      protein: document.getElementById('w-beslenme-protein').value,
+      su: document.getElementById('w-beslenme-su').value,
+      alerji: document.getElementById('w-beslenme-alerji').value,
+      sevmez: document.getElementById('w-beslenme-sevmez').value,
+      sindirim: document.getElementById('w-beslenme-sindirim').value,
+    },
+    uyku: {
+      kronotip: secimDegerAl('uyku-kronotip'),
+      sure: document.getElementById('w-uyku-sure').value,
+      yatis: document.getElementById('w-uyku-yatis').value,
+      kalkis: document.getElementById('w-uyku-kalkis').value,
+      kafein: document.getElementById('w-uyku-kafein').value,
+      sorun: document.getElementById('w-uyku-sorun').value,
+    },
+    finans: {
+      gelir: document.getElementById('w-finans-gelir').value,
+      butce: document.getElementById('w-finans-butce').value,
+      tasarruf: document.getElementById('w-finans-tasarruf').value,
+      gunlukLimit: document.getElementById('w-finans-gunluk').value,
+      borc: secimDegerAl('finans-borc'),
+      hedef: document.getElementById('w-finans-hedef').value,
+    },
+    egitim: {
+      alan: document.getElementById('w-egitim-alan').value,
+      dersler: document.getElementById('w-egitim-dersler').value,
+      gunlukSure: document.getElementById('w-egitim-sure').value,
+      ingSeviye: document.getElementById('w-egitim-ing').value,
+      sertifika: document.getElementById('w-egitim-sertifika').value,
+      zayif: document.getElementById('w-egitim-zayif').value,
+    },
+    aliskanlik: {
+      birak: checkboxDegerAl('aliskan-birak') + (document.getElementById('w-birak-diger').value ? ', '+document.getElementById('w-birak-diger').value : ''),
+      kazan: checkboxDegerAl('aliskan-kazan') + (document.getElementById('w-kazan-diger').value ? ', '+document.getElementById('w-kazan-diger').value : ''),
+      mevcutIyi: document.getElementById('w-iyi-aliskan').value,
+    },
+  };
+
+  appVeri.profil = profil;
+  veriKaydet(appVeri);
+  document.getElementById('wizard-overlay').classList.add('gizli');
+
+  const ad = profil.genel.ad || 'kullanıcı';
+  mesajEkle('ai', `Harika ${ad}! 🎉 Profilin oluşturuldu. Artık seni tanıyorum.\n\nHedeflerini, kısıtlamalarını ve alışkanlıklarını biliyorum. "Spor programı yap" ya da "beslenme planı oluştur" demen yeterli — sana özel yapacağım.\n\nNasıl başlamak istersin?`);
+}
+
+// ════════════════════════════════════
+//  NAVİGASYON
+// ════════════════════════════════════
+const PANEL_BASLIKLAR = {
+  koc:'Koç', giris:'Günlük Giriş', profil:'Profilim',
+  saglik:'Sağlık', beslenme:'Beslenme', spor:'Spor',
+  uyku:'Uyku', finans:'Finans', rapor:'Haftalık Rapor', analiz:'AI Analizleri'
+};
+
+function goster(panel) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+panel).classList.add('active');
+  document.querySelector(`[data-panel="${panel}"]`).classList.add('active');
+  document.getElementById('panel-title').textContent = PANEL_BASLIKLAR[panel]||panel;
+  if(panel==='saglik')   renderSaglik();
+  if(panel==='beslenme') renderBeslenme();
+  if(panel==='spor')     renderSpor();
+  if(panel==='uyku')     renderUyku();
+  if(panel==='finans')   renderFinans();
+  if(panel==='rapor')    renderRapor();
+  if(panel==='analiz')   renderAnaliz();
+  if(panel==='profil')   renderProfil();
+}
+
+// ════════════════════════════════════
+//  FORM KAYDETME
+// ════════════════════════════════════
+function formKaydet() {
+  const entry = {
+    tarih: new Date().toLocaleDateString('tr-TR'),
+    zaman: new Date().toISOString(),
+    kilo: parseFloat(document.getElementById('g-kilo').value)||null,
+    enerji: parseInt(document.getElementById('g-enerji').value)||null,
+    stres: parseInt(document.getElementById('g-stres').value)||null,
+    ruhHali: document.getElementById('g-ruh').value||null,
+    kalori: parseInt(document.getElementById('g-kalori').value)||null,
+    protein: parseInt(document.getElementById('g-protein').value)||null,
+    karbonhidrat: parseInt(document.getElementById('g-karbo').value)||null,
+    su: parseFloat(document.getElementById('g-su').value)||null,
+    adim: parseInt(document.getElementById('g-adim').value)||null,
+    antrenman: document.getElementById('g-antrenman').value||null,
+    antrenmanSuresi: parseInt(document.getElementById('g-antrenman-sure').value)||null,
+    kasAgrisi: parseInt(document.getElementById('g-agri').value)||null,
+    uyku: parseFloat(document.getElementById('g-uyku').value)||null,
+    uykuKalitesi: parseInt(document.getElementById('g-uyku-kalite').value)||null,
+    yatisSaati: document.getElementById('g-yatis').value||null,
+    kalkisSaati: document.getElementById('g-kalkis').value||null,
+    harcama: parseInt(document.getElementById('g-harcama').value)||null,
+    dersCalisma: parseFloat(document.getElementById('g-ders').value)||null,
+    notlar: document.getElementById('g-notlar').value||null,
+  };
+  Object.keys(entry).forEach(k=>entry[k]===null&&delete entry[k]);
+  if(Object.keys(entry).length<=2){alert('Lütfen en az birkaç değer gir!');return;}
+  const bugunStr=new Date().toLocaleDateString('tr-TR');
+  const idx=appVeri.entries.findIndex(e=>e.tarih===bugunStr);
+  if(idx>=0) appVeri.entries[idx]=entry; else appVeri.entries.push(entry);
+  veriKaydet(appVeri);
+  ['g-kilo','g-enerji','g-stres','g-kalori','g-protein','g-karbo','g-su','g-adim','g-antrenman','g-antrenman-sure','g-agri','g-uyku','g-uyku-kalite','g-yatis','g-kalkis','g-harcama','g-ders','g-notlar'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const ozet=Object.entries(entry).filter(([k,v])=>v&&!['tarih','zaman'].includes(k)).map(([k,v])=>`${k}:${v}`).join(', ');
+  goster('koc');
+  hizliMesaj(`Bugünün verilerini kaydettim: ${ozet}. Bunları profilimle birlikte analiz eder misin?`);
+}
+
+// ════════════════════════════════════
+//  HAFIZA & AI
+// ════════════════════════════════════
+function hafizaOlustur() {
+  const p = appVeri.profil || {};
+  const entries = appVeri.entries.slice(-14);
+  let mem = '';
+
+  if (p.genel) {
+    mem += `=== KULLANICI PROFİLİ ===\n`;
+    if (p.genel.ad)         mem += `Ad: ${p.genel.ad}\n`;
+    if (p.genel.yas)        mem += `Yaş: ${p.genel.yas}\n`;
+    if (p.genel.cinsiyet)   mem += `Cinsiyet: ${p.genel.cinsiyet}\n`;
+    if (p.genel.boy)        mem += `Boy: ${p.genel.boy} cm\n`;
+    if (p.genel.kilo)       mem += `Başlangıç kilosu: ${p.genel.kilo} kg\n`;
+    if (p.genel.hedefKilo)  mem += `Hedef kilo: ${p.genel.hedefKilo} kg\n`;
+    if (p.genel.amac)       mem += `Yaşam amacı: ${p.genel.amac}\n`;
+    mem += '\n';
+  }
+
+  if (p.spor && p.spor.seviye) {
+    mem += `=== SPOR PROFİLİ ===\n`;
+    mem += `Seviye: ${p.spor.seviye}\n`;
+    mem += `Antrenman yeri: ${p.spor.yer}\n`;
+    mem += `Hedef: ${p.spor.hedef}\n`;
+    mem += `Program: ${p.spor.program||'Belirsiz'}\n`;
+    mem += `Haftalık plan: ${p.spor.gun}, ${p.spor.sure}\n`;
+    mem += `Fiziksel kısıtlamalar: ${p.spor.kisitlamalar||'Yok'}\n\n`;
+  }
+
+  if (p.beslenme && p.beslenme.tip) {
+    mem += `=== BESLENME PROFİLİ ===\n`;
+    mem += `Diyet tipi: ${p.beslenme.tip}\n`;
+    mem += `Günlük öğün: ${p.beslenme.ogun}\n`;
+    mem += `Kalori hedefi: ${p.beslenme.kalori||'Belirsiz'} kcal\n`;
+    mem += `Protein hedefi: ${p.beslenme.protein||'Belirsiz'} g\n`;
+    mem += `Su hedefi: ${p.beslenme.su||'Belirsiz'} L\n`;
+    if (p.beslenme.alerji)   mem += `Alerjiler: ${p.beslenme.alerji}\n`;
+    if (p.beslenme.sevmez)   mem += `Sevmedikleri: ${p.beslenme.sevmez}\n`;
+    if (p.beslenme.sindirim) mem += `Sindirim sorunları: ${p.beslenme.sindirim}\n`;
+    mem += '\n';
+  }
+
+  if (p.uyku && p.uyku.sure) {
+    mem += `=== UYKU PROFİLİ ===\n`;
+    mem += `Kronotip: ${p.uyku.kronotip}\n`;
+    mem += `Hedef uyku: ${p.uyku.sure} saat (${p.uyku.yatis}→${p.uyku.kalkis})\n`;
+    mem += `Kafein: ${p.uyku.kafein}\n`;
+    if (p.uyku.sorun) mem += `Uyku sorunları: ${p.uyku.sorun}\n`;
+    mem += '\n';
+  }
+
+  if (p.finans && (p.finans.butce || p.finans.gelir)) {
+    mem += `=== FİNANS PROFİLİ ===\n`;
+    if (p.finans.gelir)       mem += `Aylık gelir: ${p.finans.gelir}₺\n`;
+    if (p.finans.butce)       mem += `Aylık bütçe: ${p.finans.butce}₺\n`;
+    if (p.finans.tasarruf)    mem += `Tasarruf hedefi: ${p.finans.tasarruf}₺/ay\n`;
+    if (p.finans.gunlukLimit) mem += `Günlük limit: ${p.finans.gunlukLimit}₺\n`;
+    if (p.finans.borc)        mem += `Borç durumu: ${p.finans.borc}\n`;
+    if (p.finans.hedef)       mem += `Finansal hedef: ${p.finans.hedef}\n`;
+    mem += '\n';
+  }
+
+  if (p.egitim && p.egitim.alan) {
+    mem += `=== EĞİTİM PROFİLİ ===\n`;
+    mem += `Alan: ${p.egitim.alan}\n`;
+    if (p.egitim.dersler)    mem += `Mevcut dersler: ${p.egitim.dersler}\n`;
+    if (p.egitim.gunlukSure) mem += `Günlük hedef: ${p.egitim.gunlukSure} saat\n`;
+    if (p.egitim.ingSeviye)  mem += `İngilizce: ${p.egitim.ingSeviye}\n`;
+    if (p.egitim.sertifika)  mem += `Hedef sertifika: ${p.egitim.sertifika}\n`;
+    if (p.egitim.zayif)      mem += `Zayıf konular: ${p.egitim.zayif}\n`;
+    mem += '\n';
+  }
+
+  if (p.aliskanlik && (p.aliskanlik.birak||p.aliskanlik.kazan)) {
+    mem += `=== ALIŞKANLIK PROFİLİ ===\n`;
+    if (p.aliskanlik.birak)   mem += `Bırakmak istedikleri: ${p.aliskanlik.birak}\n`;
+    if (p.aliskanlik.kazan)   mem += `Kazanmak istedikleri: ${p.aliskanlik.kazan}\n`;
+    if (p.aliskanlik.mevcutIyi) mem += `Mevcut iyi alışkanlıklar: ${p.aliskanlik.mevcutIyi}\n`;
+    mem += '\n';
+  }
+
+  if (entries.length > 0) {
+    mem += `=== SON ${entries.length} GÜNÜN VERİLERİ ===\n`;
+    entries.forEach(e=>{
+      const parts=Object.entries(e).filter(([k,v])=>v&&!['tarih','zaman'].includes(k)).map(([k,v])=>`${k}:${v}`);
+      if(parts.length) mem+=`[${e.tarih}] ${parts.join(' | ')}\n`;
+    });
+  } else {
+    mem += `=== VERİLER ===\nHenüz günlük veri yok.\n`;
+  }
+
+  return mem;
+}
+
+const SISTEM_PROMPT = `Sen "Yaşam Koçu" adında gelişmiş bir kişisel asistan yapay zekasın. Türkçe konuşuyorsun. Samimi, destekleyici ve arkadaşça bir tonsun — ama sonuç odaklısın.
+
+KULLANICININ TAM PROFİLİ VE VERİLERİ:
+{HAFIZA}
+
+GÖREVLERİN:
+1. Kullanıcının profilini, hedeflerini ve kısıtlamalarını DAIMA göz önünde bulundur
+2. Spor programı isterken: seviyesine, ekipmanına, programına (PPL vb.) ve kısıtlamalarına göre yap
+3. Beslenme planı isterken: diyet tipine, alerjilerine, kalori/protein hedefine göre yap
+4. Günlük verileri analiz et, hedeflerle karşılaştır, somut öneriler ver
+5. Veriler arasında bağlantı kur: uyku-enerji, kalori-kilo, stres-performans vb.
+6. Proaktif uyarılar ver — sorulmadan önemli gözlemleri paylaş
+
+TON: Samimi ve net. Kısa cevaplar. Listeler yerine en kritik 2-3 bilgi.`;
+
+// ════════════════════════════════════
+//  SOHBET
+// ════════════════════════════════════
+function mesajEkle(rol, metin) {
+  const box=document.getElementById('chat-messages');
+  const div=document.createElement('div'); div.className=`msg ${rol}`;
+  const av=document.createElement('div'); av.className='msg-avatar'; av.textContent=rol==='user'?'👤':'🌱';
+  const bub=document.createElement('div'); bub.className='bubble'; bub.textContent=metin;
+  div.appendChild(av); div.appendChild(bub); box.appendChild(div);
+  box.scrollTop=box.scrollHeight;
+}
+function yaziyorGoster(){
+  const box=document.getElementById('chat-messages');
+  const div=document.createElement('div'); div.className='msg ai'; div.id='typing';
+  div.innerHTML='<div class="msg-avatar">🌱</div><div class="bubble" style="display:flex;gap:4px;align-items:center"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>';
+  box.appendChild(div); box.scrollTop=box.scrollHeight;
+}
+function yaziyorKaldir(){const t=document.getElementById('typing');if(t)t.remove();}
+
+async function mesajGonder(text) {
+  const inp=document.getElementById('user-input');
+  const msg=text||inp.value.trim(); if(!msg)return;
+  inp.value=''; document.getElementById('send-btn').disabled=true;
+  mesajEkle('user',msg); chatGecmis.push({role:'user',content:msg}); yaziyorGoster();
+  const sistem=SISTEM_PROMPT.replace('{HAFIZA}',hafizaOlustur());
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST', headers:{'Content-Type':'application/json','x-api-key':'BURAYA_API_ANAHTARINI_YAZ','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:sistem,messages:chatGecmis})
+    });
+    const data=await res.json();
+    const cevap=data.content?.map(b=>b.text||'').join('')||'Bir hata oluştu.';
+    yaziyorKaldir(); mesajEkle('ai',cevap);
+    chatGecmis.push({role:'assistant',content:cevap});
+    appVeri.chatGecmis=chatGecmis.slice(-30); veriKaydet(appVeri);
+  } catch(e){yaziyorKaldir();mesajEkle('ai','Bağlantı hatası oluştu.');}
+  document.getElementById('send-btn').disabled=false;
+}
+function hizliMesaj(t){goster('koc');setTimeout(()=>mesajGonder(t),100);}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();mesajGonder();}}
+
+// ════════════════════════════════════
+//  PROFİL PANELİ
+// ════════════════════════════════════
+function renderProfil() {
+  const p = appVeri.profil || {};
+  const el = document.getElementById('profil-icerik');
+
+  if (!p.tamamlandi) {
+    el.innerHTML = `<div class="empty"><i class="ti ti-user-off"></i><p>Profil henüz oluşturulmadı.</p><button class="btn" style="margin-top:1rem" onclick="wizardBaslat()"><i class="ti ti-sparkles"></i> Profil Oluştur</button></div>`;
+    return;
+  }
+
+  const modul = (baslik, ikon, dolu, satirlar) => `
+  <div class="profil-modul">
+    <div class="profil-modul-header" onclick="this.nextElementSibling.classList.toggle('acik')">
+      <div class="sol"><i class="ti ${ikon}"></i>${baslik}</div>
+      <span class="${dolu?'tamamlandi-badge':'eksik-badge'}">${dolu?'✓ Dolu':'Eksik'}</span>
+    </div>
+    <div class="profil-modul-body">
+      <div class="profil-data-grid">${satirlar}</div>
+      <button class="btn-ghost" style="font-size:12px" onclick="wizardBaslat()"><i class="ti ti-edit"></i> Düzenle</button>
+    </div>
+  </div>`;
+
+  const veri = (label, deger) => deger ? `<div class="profil-veri"><div class="profil-veri-label">${label}</div><div class="profil-veri-deger">${deger}</div></div>` : '';
+
+  el.innerHTML =
+    modul('Genel Bilgiler','ti-user', p.genel?.ad,
+      veri('Ad',p.genel?.ad)+veri('Yaş',p.genel?.yas)+veri('Boy',p.genel?.boy&&p.genel.boy+' cm')+
+      veri('Mevcut Kilo',p.genel?.kilo&&p.genel.kilo+' kg')+veri('Hedef Kilo',p.genel?.hedefKilo&&p.genel.hedefKilo+' kg')+
+      veri('Yaşam Amacı',p.genel?.amac)
+    )+
+    modul('Spor','ti-barbell', p.spor?.seviye,
+      veri('Seviye',p.spor?.seviye)+veri('Yer',p.spor?.yer)+veri('Hedef',p.spor?.hedef)+
+      veri('Program',p.spor?.program)+veri('Haftalık Plan',p.spor?.gun&&p.spor.gun+' / '+p.spor.sure)+
+      veri('Kısıtlamalar',p.spor?.kisitlamalar)
+    )+
+    modul('Beslenme','ti-apple', p.beslenme?.tip,
+      veri('Diyet Tipi',p.beslenme?.tip)+veri('Öğün Sayısı',p.beslenme?.ogun)+
+      veri('Kalori Hedefi',p.beslenme?.kalori&&p.beslenme.kalori+' kcal')+
+      veri('Protein Hedefi',p.beslenme?.protein&&p.beslenme.protein+' g')+
+      veri('Su Hedefi',p.beslenme?.su&&p.beslenme.su+' L')+
+      veri('Alerjiler',p.beslenme?.alerji)+veri('Sindirim',p.beslenme?.sindirim)
+    )+
+    modul('Uyku','ti-moon', p.uyku?.sure,
+      veri('Kronotip',p.uyku?.kronotip)+veri('Hedef Süre',p.uyku?.sure&&p.uyku.sure+' saat')+
+      veri('Yatış',p.uyku?.yatis)+veri('Kalkış',p.uyku?.kalkis)+
+      veri('Kafein',p.uyku?.kafein)+veri('Sorunlar',p.uyku?.sorun)
+    )+
+    modul('Finans','ti-coin', p.finans?.butce,
+      veri('Aylık Gelir',p.finans?.gelir&&p.finans.gelir+'₺')+
+      veri('Aylık Bütçe',p.finans?.butce&&p.finans.butce+'₺')+
+      veri('Tasarruf Hedefi',p.finans?.tasarruf&&p.finans.tasarruf+'₺/ay')+
+      veri('Günlük Limit',p.finans?.gunlukLimit&&p.finans.gunlukLimit+'₺')+
+      veri('Borç Durumu',p.finans?.borc)+veri('Finansal Hedef',p.finans?.hedef)
+    )+
+    modul('Eğitim & Kariyer','ti-school', p.egitim?.alan,
+      veri('Alan',p.egitim?.alan)+veri('Mevcut Dersler',p.egitim?.dersler)+
+      veri('Günlük Hedef',p.egitim?.gunlukSure&&p.egitim.gunlukSure+' saat')+
+      veri('İngilizce',p.egitim?.ingSeviye)+veri('Hedef Sertifika',p.egitim?.sertifika)+
+      veri('Zayıf Konular',p.egitim?.zayif)
+    )+
+    modul('Alışkanlıklar','ti-repeat', p.aliskanlik?.birak||p.aliskanlik?.kazan,
+      veri('Bırakmak İstedikleri',p.aliskanlik?.birak)+
+      veri('Kazanmak İstedikleri',p.aliskanlik?.kazan)+
+      veri('Mevcut İyi Alışkanlıklar',p.aliskanlik?.mevcutIyi)
+    );
+}
+
+// ════════════════════════════════════
+//  METRİK & TABLO RENDER
+// ════════════════════════════════════
+function son(key,n=7){return appVeri.entries.slice(-n).map(e=>e[key]).filter(v=>v!=null).map(Number);}
+function ort(arr){return arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:null;}
+function son1(key){for(let i=appVeri.entries.length-1;i>=0;i--){if(appVeri.entries[i][key]!=null)return appVeri.entries[i][key];}return null;}
+
+function metrikKart(label,deger,birim,hedef){
+  if(deger==null)return `<div class="metric"><label>${label}</label><div class="val" style="font-size:14px;color:var(--muted)">Veri yok</div></div>`;
+  const n=parseFloat(deger);
+  let trendHTML='';
+  if(hedef){
+    const oran=n/hedef;
+    const renk=oran>=0.9&&oran<=1.1?'ok':oran<0.7||oran>1.3?'bad':'warn';
+    trendHTML=`<div class="progress-bar"><div class="progress-fill ${renk}" style="width:${Math.min(oran*100,100).toFixed(0)}%"></div></div><div style="font-size:10px;color:var(--muted);margin-top:4px">Hedef: ${hedef}${birim}</div>`;
+  }
+  return `<div class="metric"><label>${label}</label><div class="val">${Number.isInteger(n)?n:n.toFixed(1)}<span class="unit">${birim}</span></div>${trendHTML}</div>`;
+}
+
+function tabloHTML(sutunlar,veriler){
+  if(!veriler.length)return '<div class="empty"><i class="ti ti-database-off"></i><p>Veri yok. Günlük giriş sekmesinden ekle.</p></div>';
+  const header=sutunlar.map(s=>`<th>${s.label}</th>`).join('');
+  const rows=veriler.slice(-14).reverse().map(e=>{
+    const cells=sutunlar.map(s=>`<td>${e[s.key]!=null?e[s.key]+(s.birim||''):'-'}</td>`).join('');
+    return `<tr><td style="color:var(--muted)">${e.tarih}</td>${cells}</tr>`;
+  }).join('');
+  return `<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Tarih</th>${header}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function getHedef(key) {
+  const p = appVeri.profil || {};
+  const hedefler = {
+    kalori: p.beslenme?.kalori || 2000,
+    protein: p.beslenme?.protein || 150,
+    su: p.beslenme?.su || 2.5,
+    adim: 10000,
+    uyku: p.uyku?.sure || 8,
+    harcama: p.finans?.gunlukLimit || 300,
+  };
+  return hedefler[key];
+}
+
+function renderSaglik(){
+  document.getElementById('saglik-metrikler').innerHTML=[
+    metrikKart('Son kilo',son1('kilo'),'kg',appVeri.profil?.genel?.hedefKilo),
+    metrikKart('Ort. enerji',ort(son('enerji'))?.toFixed(1),'/10',7),
+    metrikKart('Ort. stres',ort(son('stres'))?.toFixed(1),'/10',null),
+  ].join('');
+  document.getElementById('saglik-tablo').innerHTML=tabloHTML(
+    [{key:'kilo',label:'Kilo',birim:'kg'},{key:'enerji',label:'Enerji',birim:'/10'},{key:'stres',label:'Stres',birim:'/10'},{key:'ruhHali',label:'Ruh Hali'}],appVeri.entries);
+}
+function renderBeslenme(){
+  document.getElementById('beslenme-metrikler').innerHTML=[
+    metrikKart('Ort. kalori',ort(son('kalori'))?.toFixed(0),'kcal',getHedef('kalori')),
+    metrikKart('Ort. protein',ort(son('protein'))?.toFixed(0),'g',getHedef('protein')),
+    metrikKart('Ort. su',ort(son('su'))?.toFixed(1),'L',getHedef('su')),
+  ].join('');
+  document.getElementById('beslenme-tablo').innerHTML=tabloHTML(
+    [{key:'kalori',label:'Kalori',birim:'kcal'},{key:'protein',label:'Protein',birim:'g'},{key:'karbonhidrat',label:'Karbo',birim:'g'},{key:'su',label:'Su',birim:'L'}],appVeri.entries);
+}
+function renderSpor(){
+  const p=appVeri.profil?.spor;
+  document.getElementById('spor-metrikler').innerHTML=[
+    metrikKart('Ort. adım',ort(son('adim'))?.toFixed(0),'',10000),
+    metrikKart('Bu hafta antrenman',son('antrenmanSuresi',7).length,` gün / ${p?.gun?.replace(' gün','')||4}`,parseInt(p?.gun)||4),
+    metrikKart('Ort. süre',ort(son('antrenmanSuresi'))?.toFixed(0),'dk',null),
+  ].join('');
+  document.getElementById('spor-tablo').innerHTML=tabloHTML(
+    [{key:'adim',label:'Adım'},{key:'antrenman',label:'Antrenman'},{key:'antrenmanSuresi',label:'Süre',birim:'dk'},{key:'kasAgrisi',label:'Ağrı',birim:'/10'}],appVeri.entries);
+}
+function renderUyku(){
+  document.getElementById('uyku-metrikler').innerHTML=[
+    metrikKart('Ort. uyku',ort(son('uyku'))?.toFixed(1),'sa',getHedef('uyku')),
+    metrikKart('Ort. kalite',ort(son('uykuKalitesi'))?.toFixed(1),'/10',7),
+  ].join('');
+  document.getElementById('uyku-tablo').innerHTML=tabloHTML(
+    [{key:'uyku',label:'Süre',birim:'sa'},{key:'uykuKalitesi',label:'Kalite',birim:'/10'},{key:'yatisSaati',label:'Yatış'},{key:'kalkisSaati',label:'Kalkış'}],appVeri.entries);
+}
+function renderFinans(){
+  const top=son('harcama',30).reduce((a,b)=>a+b,0);
+  document.getElementById('finans-metrikler').innerHTML=[
+    metrikKart('Ort. günlük',ort(son('harcama'))?.toFixed(0),'₺',getHedef('harcama')),
+    metrikKart('Bu ay toplam',top.toFixed(0),'₺',null),
+  ].join('');
+  document.getElementById('finans-tablo').innerHTML=tabloHTML(
+    [{key:'harcama',label:'Harcama',birim:'₺'},{key:'notlar',label:'Not'}],appVeri.entries);
+}
+
+function renderRapor(){
+  const el=document.getElementById('rapor-icerik');
+  const e7=appVeri.entries.slice(-7);
+  if(!e7.length){el.innerHTML='<div class="empty"><i class="ti ti-file-analytics"></i><p>Rapor için veri yok.</p></div>';return;}
+  const a=key=>{const v=e7.map(e=>e[key]).filter(x=>x!=null).map(Number);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;};
+  const s=key=>e7.map(e=>e[key]).filter(x=>x!=null).map(Number).reduce((a,b)=>a+b,0);
+  const kiloV=e7.map(e=>e.kilo).filter(x=>x);
+  const kiloD=kiloV.length>=2?(kiloV[kiloV.length-1]-kiloV[0]).toFixed(1):null;
+  function satirHTML(label,deger,hedef,birim,ters=false){
+    if(deger==null)return '';
+    const n=parseFloat(deger);
+    let renk='';
+    if(hedef){const o=n/hedef;renk=(!ters?(o>=0.85?'ok':o>=0.6?'warn':'bad'):(o<=1.1?'ok':o<=1.3?'warn':'bad'));}
+    return `<div class="report-row"><span class="lbl">${label}</span><span class="val ${renk}">${Number.isInteger(n)?n:n.toFixed(1)}${birim}</span></div>`;
+  }
+  el.innerHTML=`
+  <div class="card">
+    <h3><i class="ti ti-calendar-week"></i> Son 7 günün özeti</h3>
+    ${satirHTML('Ort. kalori',a('kalori')?.toFixed(0),getHedef('kalori'),' kcal')}
+    ${satirHTML('Ort. protein',a('protein')?.toFixed(0),getHedef('protein'),' g')}
+    ${satirHTML('Ort. su',a('su')?.toFixed(1),getHedef('su'),' L')}
+    ${satirHTML('Ort. adım',a('adim')?.toFixed(0),10000,'')}
+    ${satirHTML('Ort. uyku',a('uyku')?.toFixed(1),getHedef('uyku'),' sa')}
+    ${satirHTML('Ort. enerji',a('enerji')?.toFixed(1),7,'/10')}
+    ${satirHTML('Toplam harcama',s('harcama').toFixed(0),getHedef('harcama')*7,' ₺',true)}
+    ${kiloD!==null?`<div class="report-row"><span class="lbl">Kilo değişimi</span><span class="val ${parseFloat(kiloD)<=0?'ok':'warn'}">${parseFloat(kiloD)>0?'+':''}${kiloD} kg</span></div>`:''}
+    <div class="report-row"><span class="lbl">Toplam giriş</span><span class="val">${e7.length} gün</span></div>
+  </div>
+  <button class="btn mt" style="width:100%;justify-content:center;padding:11px" onclick="hizliMesaj('Haftalık raporumu profilimle birlikte analiz et, en önemli 3 öneriyi ver.')">
+    <i class="ti ti-sparkles"></i> AI ile Derinlemesine Analiz
+  </button>`;
+}
+
+function renderAnaliz(){
+  const el=document.getElementById('analiz-icerik');
+  const entries=appVeri.entries;
+  if(entries.length<3){el.innerHTML='<div class="empty"><i class="ti ti-bulb"></i><p>Analiz için en az 3 günlük veri gerekli.</p></div>';return;}
+  const ins=[];
+  const last7=entries.slice(-7);
+  const uV=last7.map(e=>e.uyku).filter(x=>x).map(Number);
+  if(uV.length>=3){const avg=ort(uV);if(avg<getHedef('uyku')-1)ins.push({t:'warn',i:'ti-moon',m:`Son ${uV.length} günde ort. uyku ${avg.toFixed(1)} sa. Hedefin ${getHedef('uyku')} sa.`});else ins.push({t:'good',i:'ti-moon',m:`Uyku düzenin iyi: ort. ${avg.toFixed(1)} sa.`});}
+  const enV=last7.map(e=>e.enerji).filter(x=>x).map(Number);
+  if(enV.length>=3&&uV.length>=3&&ort(uV)<6.5&&ort(enV)<6)ins.push({t:'warn',i:'ti-link',m:'Az uyku → düşük enerji bağlantısı görünüyor. Yatış saatini öne al.'});
+  const kV=last7.map(e=>e.kalori).filter(x=>x).map(Number);
+  if(kV.length>=3){const avg=ort(kV);const h=getHedef('kalori');if(avg<h*0.75)ins.push({t:'warn',i:'ti-apple',m:`Kalori çok düşük: ort. ${avg.toFixed(0)} kcal (Hedef: ${h})`});else if(avg>h*1.2)ins.push({t:'warn',i:'ti-apple',m:`Kalori hedefin üzerinde: ort. ${avg.toFixed(0)} kcal`});else ins.push({t:'good',i:'ti-apple',m:`Kalori dengeli: ort. ${avg.toFixed(0)} kcal.`});}
+  const strV=last7.map(e=>e.stres).filter(x=>x).map(Number);
+  if(strV.length>=3&&ort(strV)>7)ins.push({t:'warn',i:'ti-activity',m:`Stres yüksek: ort. ${ort(strV).toFixed(1)}/10. Dinlenme ve nefes egzersizleri dene.`});
+  const antV=last7.filter(e=>e.antrenman);
+  const gunHedef=parseInt(appVeri.profil?.spor?.gun)||4;
+  if(last7.length>=5&&antV.length<gunHedef-1)ins.push({t:'warn',i:'ti-run',m:`Bu hafta ${antV.length} antrenman. Hedefin ${gunHedef} gün/hafta.`});
+  else if(antV.length>=gunHedef)ins.push({t:'good',i:'ti-run',m:`Antrenman hedefine ulaştın! ${antV.length} gün/hafta. 💪`});
+  if(!ins.length)ins.push({t:'info',i:'ti-check',m:'Veri birikiyor. Daha fazla giriş yaptıkça detaylı analizler çıkacak.'});
+  el.innerHTML=ins.map(i=>`<div class="insight ${i.t}"><i class="ti ${i.i}"></i><span>${i.m}</span></div>`).join('')+
+  `<button class="btn mt" style="width:100%;justify-content:center;padding:11px" onclick="hizliMesaj('Tüm verilerimi ve profilimi analiz et, davranış örüntülerimi bul ve önümüzdeki hafta için kişisel plan öner.')">
+    <i class="ti ti-sparkles"></i> AI ile Tam Analiz
+  </button>`;
+}
+
+// ════════════════════════════════════
+//  WİZARD BAŞLAT / SIFIRLA
+// ════════════════════════════════════
+function wizardBaslat() {
+  aktifAdim = 0;
+  wizardGuncelle();
+  document.getElementById('wizard-overlay').classList.remove('gizli');
+}
+
+// ════════════════════════════════════
+//  BAŞLANGIÇ
+// ════════════════════════════════════
+document.getElementById('bugun-tarih').textContent = new Date().toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long'});
+secimBtnOlustur();
+
+if (!appVeri.profil?.tamamlandi) {
+  // Profil yok — sihirbazı göster
+  wizardBaslat();
+} else {
+  // Profil var — direkt uygulamaya gir
+  document.getElementById('wizard-overlay').classList.add('gizli');
+  const ad = appVeri.profil?.genel?.ad || '';
+  if (appVeri.entries.length === 0) {
+    mesajEkle('ai', `Merhaba ${ad}! 👋 Profilin hazır. Spor programı, beslenme planı veya günlük analiz istediğinde söylemen yeterli — seni tanıyorum.\n\nNasıl başlamak istersin?`);
+  } else {
+    const son = appVeri.entries[appVeri.entries.length-1];
+    mesajEkle('ai', `Tekrar hoş geldin ${ad}! 👋 ${appVeri.entries.length} günlük verim var. Son giriş: ${son.tarih}.\n\nBugünün verilerini girmek ister misin?`);
+  }
+}
+</script>
+</body>
+</html>
