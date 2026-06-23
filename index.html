@@ -1043,7 +1043,7 @@ async function mesajGonder(text) {
   const sistem=SISTEM_PROMPT.replace('{HAFIZA}',hafizaOlustur());
   try {
     const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST', headers:{'Content-Type':'application/json','x-api-key':'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','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      method:'POST', headers:{'Content-Type':'application/json','x-api-key':'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','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},'
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:sistem,messages:chatGecmis})
     });
     const data=await res.json();
